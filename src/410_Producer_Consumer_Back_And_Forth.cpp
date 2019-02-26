@@ -62,7 +62,7 @@ void producer(int numbcounts) {
 void consumer(int id) {
 
 	//first lets wait until producer is ready to go
-	while (!bDone){
+	while (true){
 		unique_lock<mutex> lck(m);
 
 		while (!bProducedOne && !bDone)
@@ -82,6 +82,9 @@ void consumer(int id) {
 			lck.unlock();
 			cv.notify_all();
 		}	
+
+		if(bDone == true)
+			break;
 	}
 	unique_lock<mutex> lck(m);
 	cout << "  Consumer: " << id << " exiting" << endl;
