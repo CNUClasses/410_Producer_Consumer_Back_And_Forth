@@ -37,6 +37,8 @@ void producer(int numbcounts) {
 		}
 		
 		cv.notify_all();	//tell consumer to consume
+//		cv.notify_one();	//tell consumer to consume
+
 		
 		//wait until consumer is done
 		{
@@ -83,8 +85,13 @@ void consumer(int id) {
 			cv.notify_all();
 		}	
 
-		if(bDone == true)
-			break;
+//		{
+////			//what happens if we lock access?
+//			unique_lock<mutex> lck(m);
+			if(bDone == true)
+				break;
+//		}
+
 	}
 	unique_lock<mutex> lck(m);
 	cout << "  Consumer: " << id << " exiting" << endl;
