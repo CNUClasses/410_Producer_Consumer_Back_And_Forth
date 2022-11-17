@@ -19,7 +19,6 @@ mutex m;				//mutual exclusion
 condition_variable cv; 	//for signaling
 
 bool bProducedOne = false;	
-bool bConsumedOne = false;	
 bool bDone = false;			//used by producer to indicate we are done
 int gCount = 0;
 
@@ -36,17 +35,15 @@ void producer(int numbcounts) {
 			bProducedOne = true;	//indicate one is ready
 		}
 		
-		cv.notify_all();	//tell consumer to consume
-//		cv.notify_one();	//tell consumer to consume
+//		cv.notify_all();	//tell consumer to consume
+		cv.notify_one();	//tell consumer to consume, will this work?
 
 		
 		//wait until consumer is done
 		{
 			unique_lock<mutex> lck(m);
-			while(!bConsumedOne)
+			while(bProducedOne)
 				cv.wait(lck);
-			//reset
-			bConsumedOne = false;
 		}
 	}
 
@@ -59,6 +56,8 @@ void producer(int numbcounts) {
 	
 	//this will wake the consumer who sees the bDone==true and then leaves
 	cv.notify_all();
+	//cv.notify_one();	//tell consumer to consume, will this work?
+
 }
 
 void consumer(int id) {
@@ -70,6 +69,7 @@ void consumer(int id) {
 		while (!bProducedOne && !bDone)
 			cv.wait(lck);
 
+
 		if (bProducedOne){
 			//consume
 			gCount--;
@@ -78,20 +78,14 @@ void consumer(int id) {
 
 			//reset (forget this and other consumers may decrement gCount)
 			bProducedOne = false;		
-			bConsumedOne = true;
 			
 			//and notify
 			lck.unlock();
 			cv.notify_all();
 		}	
 
-//		{
-////			//what happens if we lock access?
-//			unique_lock<mutex> lck(m);
-			if(bDone == true)
-				break;
-//		}
-
+		if(bDone == true)
+			break;
 	}
 	unique_lock<mutex> lck(m);
 	cout << "  Consumer: " << id << " exiting" << endl;
